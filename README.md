@@ -20,6 +20,8 @@ Changes From The Design Document:
 
 I felt the original design document was good, but I decided to not stick to a grid. I felt this would make the game more interesting. I also implemented a different perspective more akin to the old light-bike games based on the sequence in tron. It makes the action more exciting, as well as clearly deliniating which snake you are controlling.
 
+I also decided on just one apple to concentrate the action at one point.
+
 Good / Bad / Ugly Code:
 
 For good code, probably the body segment control. This linked-list allows for really easy rendering and updating of the snake and the segments, and turns are easy to implement. In addition, the code allows for easy re-winding of time for the server or other players to catch up with a turn. It also allows for nice serialization which is a plus.
