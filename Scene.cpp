@@ -3,6 +3,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -161,6 +162,15 @@ void Scene::delete_camera(Scene::Camera *object) {
 	list_delete< Scene::Camera >(object);
 }
 
+Scene::SnakeObject::SnakeObject(Snake *snake) {
+	this->snake = snake;
+}
+
+Scene::SnakeObject *Scene::new_snake(Snake *snake) {
+	snakes.emplace_back(snake);
+	return &snakes.back();
+}
+
 void Scene::draw(Scene::Camera const *camera) const {
 	assert(camera && "Must have a camera to draw scene from.");
 
@@ -197,6 +207,89 @@ void Scene::draw(Scene::Camera const *camera) const {
 
 		//draw the object:
 		glDrawArrays(GL_TRIANGLES, object->start, object->count);
+	}
+
+	auto make_matrix = [](glm::vec2 pos, glm::vec2 scale) {
+		return glm::mat4(
+					glm::vec4(1.0f, 0.0f, 0.0f, 0.0f),
+					glm::vec4(0.0f, 1.0f, 0.0f, 0.0f),
+					glm::vec4(0.0f, 0.0f, 1.0f, 0.0f),
+					glm::vec4(pos, 0.f, 1.0f)
+				) * glm::mat4(
+					glm::vec4(scale.x, 0.0f, 0.0f, 0.f),
+					glm::vec4(0.f, scale.y, 0.f, 0.f),
+					glm::vec4(0.f, 0.f, 1.f, 0.f),
+					glm::vec4(0.f, 0.f, 0.f, 1.f)
+				);
+	};
+
+	for (SnakeObject const &object : snakes) {
+
+		auto setup_draw = [&object, world_to_clip](glm::mat4 local_to_world) {
+			//compute modelview+projection (object space to clip space) matrix for this object:
+			glm::mat4 mvp = world_to_clip * local_to_world;
+
+			//compute modelview (object space to camera local space) matrix for this object:
+			glm::mat4 mv = local_to_world;
+
+			//NOTE: inverse cancels out transpose unless there is scale involved
+			glm::mat3 itmv = glm::inverse(glm::transpose(glm::mat3(mv)));
+
+			//set up program uniforms:
+			glUseProgram(object.program);
+			if (object.program_mvp_mat4 != -1U) {
+				glUniformMatrix4fv(object.program_mvp_mat4, 1, GL_FALSE, glm::value_ptr(mvp));
+			}
+			if (object.program_mv_mat4x3 != -1U) {
+				glUniformMatrix4x3fv(object.program_mv_mat4x3, 1, GL_FALSE, glm::value_ptr(mv));
+			}
+			if (object.program_itmv_mat3 != -1U) {
+				glUniformMatrix3fv(object.program_itmv_mat3, 1, GL_FALSE, glm::value_ptr(itmv));
+			}
+
+			//if (object.set_uniforms) object.set_uniforms();
+
+			glBindVertexArray(object.vao);
+		};
+
+		auto draw_seg = [&object, &setup_draw](glm::mat4 local_to_world) {
+			setup_draw(local_to_world);
+			//draw the object:
+			glDrawArrays(GL_TRIANGLES, object.start, object.count);
+		};
+
+		auto draw_joint = [&object, &setup_draw](glm::mat4 local_to_world) {
+			setup_draw(local_to_world);
+			//draw the object:
+			glDrawArrays(GL_TRIANGLES, object.joint_start, object.joint_count);
+		};
+
+		for (auto body = object.snake->tail; body != nullptr; body = body->next) {
+			
+			{ // Draw segment
+				glm::mat4 local_to_world = make_matrix(body->front - (body->dir_vec() * body->length / 2.f),
+											glm::vec2(body->dir == Snake::Direction::LEFT ||
+													body->dir == Snake::Direction::RIGHT ? body->length : 1.f,
+													body->dir == Snake::Direction::UP ||
+													body->dir == Snake::Direction::DOWN ? body->length : 1.f));
+				
+				draw_seg(local_to_world * glm::mat4_cast(glm::angleAxis(3.14159265f/2.f,
+											glm::vec3(body->dir == Snake::Direction::LEFT ||
+													body->dir == Snake::Direction::RIGHT ? 0.f : 1.f,
+													body->dir == Snake::Direction::UP ||
+													body->dir == Snake::Direction::DOWN ? 0.f : 1.f, 0.f))));
+			}
+
+			{ // Draw joint
+				glm::mat4 local_to_world = make_matrix(body->front, glm::vec2(1.1f, 1.1f));
+				draw_joint(local_to_world);
+			}
+
+			if (body == object.snake->tail) {
+				glm::mat4 local_to_world = make_matrix(body->front - (body->dir_vec() * body->length), glm::vec2(1.1f, 1.1f));
+				draw_joint(local_to_world);
+			}
+		}
 	}
 }
 

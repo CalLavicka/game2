@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Mode.hpp"
+#include "Scene.hpp"
 
 #include "MeshBuffer.hpp"
 #include "GL.hpp"
@@ -32,6 +33,18 @@ struct GameMode : public Mode {
 
 	//------- game state -------
 	Game state;
+	bool initiated = false;
+	bool started = false;
+	bool lose = false;
+	bool win = false;
+
+	void load_objects();
+
+	// Client side scene
+	Scene scene;
+	// Own snake
+	Snake * player_snake;
+	Scene::Object * apple_object;
 
 	//------ networking ------
 	Client &client; //client object; manages connection to server.

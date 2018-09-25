@@ -1,39 +1,109 @@
 #include "Game.hpp"
 
-void Game::update(float time) {
-	ball += ball_velocity * time;
-	if (ball.x >= 0.5f * FrameWidth - BallRadius) {
-		ball_velocity.x = -std::abs(ball_velocity.x);
-	}
-	if (ball.x <=-0.5f * FrameWidth + BallRadius) {
-		ball_velocity.x = std::abs(ball_velocity.x);
-	}
-	if (ball.y >= 0.5f * FrameHeight - BallRadius) {
-		ball_velocity.y = -std::abs(ball_velocity.y);
-	}
-	if (ball.y <=-0.5f * FrameHeight + BallRadius) {
-		ball_velocity.y = std::abs(ball_velocity.y);
+#include <iostream>
+
+using namespace glm;
+
+
+const float Game::MAX_X = 10.f;
+const float Game::MAX_Y = 10.f;
+
+void Game::new_game(int players) {
+	for(Snake *snake : snakes) {
+		delete snake;
 	}
 
-	auto do_point = [this](glm::vec2 const &pt) {
-		glm::vec2 to = ball - pt;
-		float len2 = glm::dot(to, to);
-		if (len2 > BallRadius * BallRadius) return;
-		//if point is inside ball, make ball velocity outward-going:
-		float d = glm::dot(ball_velocity, to);
-		ball_velocity += ((std::abs(d) - d) / len2) * to;
-	};
+	snakes.clear();
 
-	do_point(glm::vec2(paddle.x - 0.5f * PaddleWidth, paddle.y));
-	do_point(glm::vec2(paddle.x + 0.5f * PaddleWidth, paddle.y));
+	for(int i=0; i<players; i++) {
+		snakes.push_back(new Snake(vec2(i * 2.f, 0.f), 2.f, Snake::Direction::UP));
+	}
+}
 
-	auto do_edge = [&](glm::vec2 const &a, glm::vec2 const &b) {
-		float along = glm::dot(ball-a, b-a);
-		float max = glm::dot(b-a,b-a);
-		if (along <= 0.0f || along >= max) return;
-		do_point(glm::mix(a,b,along/max));
-	};
+bool Game::update(float time, bool server) {
+	
+	bool ret = false;
+	for (Snake *snake : snakes) {
+		if(snake->dead) {
+			continue;
+		}
+		snake->update(time);
 
-	do_edge(glm::vec2(paddle.x + 0.5f * PaddleWidth, paddle.y), glm::vec2(paddle.x - 0.5f * PaddleWidth, paddle.y));
+		vec2 dif = snake->head->front - apple_pos;
+		if (!ret && dot(dif, dif) <= 1.f) {
+			snake->extra_length += 1.f;
+			ret = true;
+		}
 
+		if (server) {
+			if (snake->collision_with_self()) {
+				snake->dead = true;
+				std::cout << "COLLISION" << std::endl;
+				continue;
+			}
+
+			if (abs(snake->head->front.x) >= MAX_X || abs(snake->head->front.y) >= MAX_Y) {
+				snake->dead = true;
+				continue;
+			}
+
+			for (Snake *other : snakes) {
+				if (other != snake && !other->dead && snake->collision_with_other(other)) {
+					snake->dead = true;
+					std::cout << "COLLISION2" << std::endl;
+					break;
+				}
+			}
+		}
+	}
+
+	return ret;
+}
+
+void Game::send_sync(std::list< Connection > &connections) {
+	// Total size is size of all snakes + signal byte + length param
+	int total_size = 1 + sizeof(int);
+	for(Snake * snake : snakes) {
+		total_size += snake->serial_length();
+	}
+
+	char * buf = (char *)malloc(total_size);
+
+	buf[0] = 'y';
+	memcpy(buf + 1, &total_size, sizeof(int));
+	int offset = 1 + sizeof(int);
+
+	for(Snake * snake : snakes) {
+		offset += snake->serialize(buf + offset);
+	}
+
+	for (Connection &conn : connections) {
+		conn.send_raw(buf, total_size);
+	}
+
+	assert(offset == total_size);
+	free(buf);
+}
+
+void Game::recv_sync(Connection *conn) {
+	assert(conn->recv_buffer[0] == 'y');
+	if (conn->recv_buffer.size() < 5) {
+		return;
+	}
+
+	int size;
+	memcpy(&size, conn->recv_buffer.data() + 1, sizeof(int));
+	if (conn->recv_buffer.size() >= size) {
+		char *data = (char *)malloc(size);
+		memcpy(data, conn->recv_buffer.data(), size);
+		conn->recv_buffer.erase(conn->recv_buffer.begin(), conn->recv_buffer.begin() + size);
+
+		int offset = 1 + sizeof(int);
+		for(Snake * snake : snakes) {
+			offset += snake->deserialize(data + offset);
+		}
+		
+		assert(offset == size);
+		free(data);
+	}
 }

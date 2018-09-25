@@ -62,6 +62,7 @@ SERVER_NAMES =
 COMMON_NAMES =
 	Connection
 	Game
+	Snake
 	;
 
 CLIENT_NAMES =

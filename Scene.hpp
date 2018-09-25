@@ -2,6 +2,8 @@
 
 #include "GL.hpp"
 
+#include "Snake.hpp"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
@@ -104,6 +106,25 @@ struct Scene {
 		Camera *alloc_next = nullptr;
 	};
 
+	struct SnakeObject {
+		SnakeObject(Snake *);
+
+		Snake * snake; // The snake the object represents
+
+		//program info:
+		GLuint program = 0;
+		GLuint program_mvp_mat4 = -1U; //uniform index for object-to-clip matrix (mat4)
+		GLuint program_mv_mat4x3 = -1U; //uniform index for model-to-lighting-space matrix (mat4x3)
+		GLuint program_itmv_mat3 = -1U; //uniform index for normal-to-lighting-space matrix (mat3)
+
+		//attribute info:
+		GLuint vao = 0;
+		GLuint start = 0;
+		GLuint count = 0;
+		GLuint joint_start = 0;
+		GLuint joint_count = 0;
+	};
+
 	//------ functions to create / destroy scene things -----
 	//NOTE: all scene objects are automatically freed when scene is deallocated
 
@@ -122,11 +143,16 @@ struct Scene {
 	//Delete a camera:
 	void delete_camera(Camera *);
 
+	SnakeObject *new_snake(Snake *);
+
 	//used to manage allocated objects:
 	Transform *first_transform = nullptr;
 	Object *first_object = nullptr;
 	Camera *first_camera = nullptr;
 	//(you shouldn't be manipulating these pointers directly
+
+	// List of snakes to be rendered
+	std::vector<SnakeObject> snakes;
 
 	//------ functions to traverse the scene ------
 

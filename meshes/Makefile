@@ -7,7 +7,7 @@ ifeq ($(HOSTNAME), incepchow)
 else ifeq ($(HOSTNAME), retchow)
 	BLENDER=/Applications/Blender/blender.app/Contents/MacOS/blender
 else
-	BLENDER = blender
+	BLENDER = /Applications/blender-2.78a-OSX_10.6-x86_64/blender.app/Contents/MacOS/blender
 endif
 
 DIST=../dist

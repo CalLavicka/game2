@@ -1,0 +1,26 @@
+{
+    "files.associations": {
+        "__config": "cpp",
+        "__nullptr": "cpp",
+        "random": "cpp",
+        "__split_buffer": "cpp",
+        "list": "cpp",
+        "vector": "cpp",
+        "__locale": "cpp",
+        "__string": "cpp",
+        "string": "cpp",
+        "string_view": "cpp",
+        "cstddef": "cpp",
+        "exception": "cpp",
+        "initializer_list": "cpp",
+        "new": "cpp",
+        "stdexcept": "cpp",
+        "type_traits": "cpp",
+        "typeinfo": "cpp",
+        "algorithm": "cpp",
+        "chrono": "cpp",
+        "map": "cpp",
+        "set": "cpp",
+        "unordered_map": "cpp"
+    }
+}

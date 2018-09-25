@@ -35,8 +35,8 @@ int main(int argc, char **argv) {
 #endif
 	struct {
 		//TODO: this is where you set the title and size of your game window
-		std::string title = "TODO: Game Title";
-		glm::uvec2 size = glm::uvec2(640, 400);
+		std::string title = "VS: Snake";
+		glm::uvec2 size = glm::uvec2(640, 480);
 	} config;
 
 	//----- start connection to server ----
