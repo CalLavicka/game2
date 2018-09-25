@@ -274,7 +274,7 @@ int Snake::deserialize(void *buf) {
         (void)offset; // To shut the compiler up about modifying offset in the loop
     }
 
-    std::cout << "HEAD: " << this->head->id << ", SHOULD BE: " << id << std::endl;
+    //std::cout << "HEAD: " << this->head->id << ", SHOULD BE: " << id << std::endl;
 
     assert(offset == size);
     return size;

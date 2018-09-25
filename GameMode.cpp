@@ -263,7 +263,7 @@ void GameMode::update(float elapsed) {
 void GameMode::draw(glm::uvec2 const &drawable_size) {
 	camera->aspect = drawable_size.x / float(drawable_size.y);
 
-	glClearColor(0.25f, 0.1f, 0.45f, 0.0f);
+	glClearColor(0.25f, 0.1f, 0.3f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	if (win || lose) {

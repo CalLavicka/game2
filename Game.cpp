@@ -38,7 +38,7 @@ bool Game::update(float time, bool server) {
 		if (server) {
 			if (snake->collision_with_self()) {
 				snake->dead = true;
-				std::cout << "COLLISION" << std::endl;
+				//std::cout << "COLLISION" << std::endl;
 				continue;
 			}
 
@@ -50,7 +50,7 @@ bool Game::update(float time, bool server) {
 			for (Snake *other : snakes) {
 				if (other != snake && !other->dead && snake->collision_with_other(other)) {
 					snake->dead = true;
-					std::cout << "COLLISION2" << std::endl;
+					//std::cout << "COLLISION2" << std::endl;
 					break;
 				}
 			}

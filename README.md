@@ -1,11 +1,10 @@
 # Game Information
-(Note: fill in this portion with information about your game.)
 
-Title: (TODO: your game's title)
+Title: Versus Snake
 
-Author: (TODO: your name)
+Author: Cal Lavicka
 
-Design Document: [TODO: name of design document](TODO: link to design document)
+Design Document: [An Apple a Day](http://graphics.cs.cmu.edu/courses/15-466-f18/game2-designs/apnayak/)
 
 Screen Shot:
 
@@ -13,15 +12,25 @@ Screen Shot:
 
 How To Play:
 
-TODO: describe the controls and (if needed) goals/strategy.
+Control your snake by turning left/right with the A/D keys. Collect apples to grow longer. Avoid walls and
+body segments from both yourself and the other enemy. Try to trap the enemy and force them to collide into you.
+The first person to collide into the wall or a snake loses, and the other player wins!
 
 Changes From The Design Document:
 
-TODO: what did you need to add/remove/modify from the original design? Why?
+I felt the original design document was good, but I decided to not stick to a grid. I felt this would make the game more interesting. I also implemented a different perspective more akin to the old light-bike games based on the sequence in tron. It makes the action more exciting, as well as clearly deliniating which snake you are controlling.
 
 Good / Bad / Ugly Code:
 
-TODO: provide examples of code you wrote from this project that you think is good (elegant, simple, useful), bad (hack-y, brittle, unreadable), and ugly (particularly inelegant). Provide a sentence or two of justification for the examples.
+For good code, probably the body segment control. This linked-list allows for really easy rendering and updating of the snake and the segments, and turns are easy to implement. In addition, the code allows for easy re-winding of time for the server or other players to catch up with a turn. It also allows for nice serialization which is a plus.
+
+For bad code, there is the rendering of the snakes. Rather than get them to work with the existing object/transform classes in Scene.cpp, I just decided to add my own snake object. It's not the most elegant, but it works and allowed me to be way more versatile in how I stored the snakes.
+
+For ugly code, the server code for getting a player's snake from the connection. It works, but there are some problems like when one player disconnects or additional players join. It is hard to handle all of the cases efficiently.
+
+Credits:
+
+[Apple Model by Poly by Google](https://poly.google.com/view/5hRReRDr0v4)
 
 # Using This Base Code
 
